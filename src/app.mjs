@@ -1,7 +1,7 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import cors from "cors";
-dotenv.config();
+import postsRoutes from "./routes/postsRoutes.mjs";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -9,15 +9,7 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// GET /profiles - ดูข้อมูลโปรไฟล์ของ John
-app.get("/profiles", (req, res) => {
-  res.status(200).json({
-    data: {
-      name: "john",
-      age: 20,
-    },
-  });
-});
+app.use("/posts", postsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
