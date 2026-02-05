@@ -1,41 +1,74 @@
-import { createPost } from "../repositories/posts.repository.mjs";
+import {
+  createPost,
+  getPostsFiltered,
+  getPostById,
+  updatePost,
+  deletePost,
+} from "../repositories/posts.repository.mjs";
 
-const REQUIRED_FIELDS = [
-  "title",
-  "image",
-  "category_id",
-  "description",
-  "content",
-  "status_id",
-];
 export const createPostService = async (body) => {
-  const { title, image, category_id, description, content, status_id } = body;
-
-  const isMissing = REQUIRED_FIELDS.some(
-    (field) =>
-      body[field] == null ||
-      (typeof body[field] === "string" && body[field].trim() === "") ||
-      (typeof body[field] === "number" && Number.isNaN(body[field]))
-  );
-  if (isMissing) {
-    const err = new Error();
-    err.statusCode = 400;
-    throw err;
-  }
-
   try {
-    return await createPost({
-      title,
-      image,
-      category_id,
-      description,
-      content,
-      status_id,
+    const post = await createPost(body);
+    return post;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getPostByIdService = async (postId) => {
+  try {
+    const post = await getPostById(postId);
+    return post;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const updatePostService = async (postId, body) => {
+  try {
+    const post = await updatePost(postId, body);
+    return post;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deletePostService = async (postId) => {
+  try {
+    const post = await deletePost(postId);
+    return post;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getPostsService = async (query) => {
+  try {
+    const page = Math.max(1, parseInt(query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(query.limit, 10) || 6));
+    const offset = (page - 1) * limit;
+    const category = query.category ?? null;
+    const keyword = query.keyword ?? null;
+
+    const { total, rows } = await getPostsFiltered({
+      limit,
+      offset,
+      category: category === "" ? null : category,
+      keyword: keyword === "" ? null : keyword,
     });
-  } catch (dbError) {
-    console.error("DB error:", dbError);   // เพิ่มบรรทัดนี้
-    const err = new Error();
-    err.statusCode = 500;
-    throw err;
+
+    const totalPages = Math.ceil(total / limit);
+    const nextPage = page < totalPages ? page + 1 : null;
+
+    return {
+      totalPosts: total,
+      totalPages,
+      currentPage: page,
+      limit,
+      posts: rows,
+      nextPage,
+    };
+  } catch (error) {
+    return error;
   }
 };
