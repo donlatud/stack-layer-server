@@ -2,6 +2,8 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import postsRoutes from "./routes/posts.routes.mjs";
+import categoriesRoutes from "./routes/categories.routes.mjs";
+import commentsRoutes from "./routes/comments.routes.mjs";
 import authRoutes from "./routes/auth.routes.mjs";
 import protectedRoutes from "./routes/protected.routes.mjs";
 
@@ -14,6 +16,8 @@ app.use(express.json());
 
 // Public and resource routes
 app.use("/posts", postsRoutes);
+app.use("/categories", categoriesRoutes);
+app.use("/comments", commentsRoutes);
 app.use("/auth", authRoutes);
 
 // Protected and admin routes
