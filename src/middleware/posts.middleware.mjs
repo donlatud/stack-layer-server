@@ -109,6 +109,60 @@ export const postBodyValidationWithOptionalFile = (req, res, next) => {
   next();
 };
 
+/**
+ * Validation สำหรับแก้ไขโพสต์ (PUT): รับได้ทั้ง JSON หรือ multipart
+ * ต้องมี image (URL) หรือ imageFile (ไฟล์) อย่างใดอย่างหนึ่ง
+ * Parse category_id, status_id เป็น number
+ */
+export const postBodyValidationForUpdate = (req, res, next) => {
+  const body = req.body;
+  const file = req.files?.imageFile?.[0];
+  const hasImageUrl = isProvided(body.image) && typeof body.image === "string";
+  const hasImageFile = file && Buffer.isBuffer(file.buffer);
+
+  if (!isProvided(body.title)) {
+    return validationError(res, "Title is required");
+  }
+  if (typeof body.title !== "string") {
+    return validationError(res, "Title must be a string");
+  }
+
+  if (!hasImageUrl && !hasImageFile) {
+    return validationError(res, "Image is required: send image (URL) or imageFile (file)");
+  }
+  if (hasImageUrl && hasImageFile) {
+    return validationError(res, "Send either image (URL) or imageFile (file), not both");
+  }
+
+  const categoryId = body.category_id != null ? parseInt(body.category_id, 10) : NaN;
+  if (!Number.isInteger(categoryId)) {
+    return validationError(res, "Category_id is required and must be a number");
+  }
+  req.body.category_id = categoryId;
+
+  if (!isProvided(body.description)) {
+    return validationError(res, "Description is required");
+  }
+  if (typeof body.description !== "string") {
+    return validationError(res, "Description must be a string");
+  }
+
+  if (!isProvided(body.content)) {
+    return validationError(res, "Content is required");
+  }
+  if (typeof body.content !== "string") {
+    return validationError(res, "Content must be a string");
+  }
+
+  const statusId = body.status_id != null ? parseInt(body.status_id, 10) : NaN;
+  if (!Number.isInteger(statusId)) {
+    return validationError(res, "Status_id is required and must be a number");
+  }
+  req.body.status_id = statusId;
+
+  next();
+};
+
 export const postIdValidation = async (req, res, next) => {
   try {
     const { postId } = req.params;

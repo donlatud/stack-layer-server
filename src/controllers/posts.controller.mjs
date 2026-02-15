@@ -48,18 +48,18 @@ export const updatePostController = async (req, res) => {
   try {
     const { postId } = req.params;
     const body = req.body;
-    await updatePostService(postId, body);
-    return res.status(200).json(
-      {
-        "message": "Updated post sucessfully"
-      }
-    );
-  } catch {
-    return res.status(500).json(
-      {
-        "message": "Server could not update post because database connection"
-      }
-    );
+    const imageFile = req.files?.imageFile?.[0] ?? null;
+    await updatePostService(postId, body, imageFile);
+    return res.status(200).json({
+      message: "Updated post successfully",
+    });
+  } catch (err) {
+    console.error("updatePostController", err);
+    const message =
+      err.message?.includes("storage") || err.message?.includes("Bucket")
+        ? "Server could not upload image"
+        : "Server could not update post because database connection";
+    return res.status(500).json({ message });
   }
 };
 

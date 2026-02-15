@@ -14,7 +14,7 @@ import {
   getCommentsController,
   postCommentController,
 } from "../controllers/comments.controller.mjs";
-import { postBodyValidation, postBodyValidationWithOptionalFile, postIdValidation } from "../middleware/posts.middleware.mjs";
+import { postBodyValidation, postBodyValidationWithOptionalFile, postBodyValidationForUpdate, postIdValidation } from "../middleware/posts.middleware.mjs";
 import { commentBodyValidation } from "../middleware/comments.middleware.mjs";
 import { postImageUpload } from "../middleware/upload.middleware.mjs";
 import protectUser from "../middleware/protectUser.mjs";
@@ -26,7 +26,7 @@ const router = express.Router();
 router.post("/", postImageUpload, postBodyValidationWithOptionalFile, protectAdmin, createPostController);
 router.get("/", optionalProtectUser, getPostsController);
 router.get("/:postId", postIdValidation, optionalProtectUser, getPostByIdController);
-router.put("/:postId", postBodyValidation, postIdValidation, protectAdmin, updatePostController);
+router.put("/:postId", postImageUpload, postBodyValidationForUpdate, postIdValidation, protectAdmin, updatePostController);
 router.delete("/:postId", postIdValidation, protectAdmin, deletePostController);
 
 router.post("/:postId/like", postIdValidation, protectUser, postLikeController);

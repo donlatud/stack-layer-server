@@ -30,13 +30,18 @@ export const getPostByIdService = async (postId) => {
   }
 };
 
-export const updatePostService = async (postId, body) => {
-  try {
-    const post = await updatePost(postId, body);
-    return post;
-  } catch (error) {
-    return error;
+export const updatePostService = async (postId, body, imageFile = null) => {
+  const payload = { ...body };
+  if (imageFile && imageFile.buffer) {
+    const { publicUrl } = await uploadPostImage(
+      imageFile.buffer,
+      imageFile.originalname,
+      imageFile.mimetype
+    );
+    payload.image = publicUrl;
   }
+  const post = await updatePost(postId, payload);
+  return post;
 };
 
 export const deletePostService = async (postId) => {
