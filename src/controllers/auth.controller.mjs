@@ -80,3 +80,19 @@ export const resetPasswordController = async (req, res) => {
 
   return res.status(200).json({ message: "Password updated successfully" });
 };
+
+export const updateProfileController = async (req, res) => {
+  const userId = req.user?.id;
+  const file = req.files?.avatarFile?.[0] ?? null;
+  const name = req.body?.name != null ? String(req.body.name).trim() : undefined;
+  const result = await authService.updateProfile(userId, { file, name });
+
+  if (!result.ok) {
+    if (UNAUTHORIZED_CODES.includes(result.code)) {
+      return res.status(401).json({ error: result.message });
+    }
+    return res.status(500).json({ error: result.message ?? "Internal server error" });
+  }
+
+  return res.status(200).json(result.user);
+};

@@ -27,3 +27,36 @@ export const create = async (user) => {
   const result = await pool.query(query, values);
   return result.rows[0];
 };
+
+/**
+ * อัปเดตโปรไฟล์ (profile_pic, name) ตาม id
+ * @param {string} id - user id
+ * @param {{ profile_pic?: string, name?: string }} updates
+ * @returns {Promise<object>} แถวที่อัปเดต
+ */
+export const updateProfile = async (id, updates) => {
+  const { profile_pic, name } = updates;
+  const setParts = [];
+  const values = [];
+  let pos = 1;
+  if (profile_pic !== undefined) {
+    setParts.push(`${FIELDS.profilePic} = $${pos}`);
+    values.push(profile_pic);
+    pos += 1;
+  }
+  if (name !== undefined) {
+    setParts.push(`${FIELDS.name} = $${pos}`);
+    values.push(name);
+    pos += 1;
+  }
+  if (setParts.length === 0) return (await findById(id)) ?? null;
+  values.push(id);
+  const query = `
+    UPDATE ${TABLE_NAME}
+    SET ${setParts.join(", ")}
+    WHERE ${FIELDS.id} = $${pos}
+    RETURNING *
+  `;
+  const result = await pool.query(query, values);
+  return result.rows[0];
+};
