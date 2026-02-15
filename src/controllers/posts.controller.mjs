@@ -10,18 +10,18 @@ import { getLikeInfoService, getLikesForPostsService } from "../services/likes.s
 export const createPostController = async (req, res) => {
   try {
     const body = req.body;
-    await createPostService(body);
-    return res.status(201).json(
-      {
-        "message": "Created post sucessfully"
-      }
-    );
-  } catch {
-    return res.status(500).json(
-      {
-        "message": "Server could not create post because database connection"
-      }
-    );
+    const imageFile = req.files?.imageFile?.[0] ?? null;
+    await createPostService(body, imageFile);
+    return res.status(201).json({
+      message: "Created post successfully",
+    });
+  } catch (err) {
+    console.error("createPostController", err);
+    const message =
+      err.message?.includes("storage") || err.message?.includes("Bucket")
+        ? "Server could not upload image"
+        : "Server could not create post because database connection";
+    return res.status(500).json({ message });
   }
 }
 
