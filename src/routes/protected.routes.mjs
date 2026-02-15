@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { getProtectedRoute, getAdminOnlyRoute } from "../controllers/protected.controller.mjs";
+import { getNotificationsController } from "../controllers/notifications.controller.mjs";
 import protectUser from "../middleware/protectUser.mjs";
 import protectAdmin from "../middleware/protectAdmin.mjs";
 
@@ -7,6 +8,9 @@ const protectedRouter = Router();
 
 // Protected routes (require valid Supabase JWT)
 protectedRouter.get("/protected-route", protectUser, getProtectedRoute);
+
+// Notifications (member + admin)
+protectedRouter.get("/notifications", protectUser, getNotificationsController);
 
 // Admin-only routes (require role = admin in users table)
 protectedRouter.get("/admin-only", protectAdmin, getAdminOnlyRoute);
