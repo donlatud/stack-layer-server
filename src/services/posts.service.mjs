@@ -5,14 +5,20 @@ import {
   updatePost,
   deletePost,
 } from "../repositories/posts.repository.mjs";
+import { uploadPostImage } from "./storage.service.mjs";
 
-export const createPostService = async (body) => {
-  try {
-    const post = await createPost(body);
-    return post;
-  } catch (error) {
-    return error;
+export const createPostService = async (body, imageFile = null) => {
+  const payload = { ...body };
+  if (imageFile && imageFile.buffer) {
+    const { publicUrl } = await uploadPostImage(
+      imageFile.buffer,
+      imageFile.originalname,
+      imageFile.mimetype
+    );
+    payload.image = publicUrl;
   }
+  const post = await createPost(payload);
+  return post;
 };
 
 export const getPostByIdService = async (postId) => {

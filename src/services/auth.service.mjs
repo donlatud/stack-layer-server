@@ -1,5 +1,6 @@
 import supabase from "../utils/supabase.mjs";
 import * as usersRepository from "../repositories/users.repository.mjs";
+import { uploadAvatar } from "./storage.service.mjs";
 
 // Register: check username → Supabase signUp → insert into users table
 export const register = async (body) => {
@@ -155,4 +156,59 @@ export const resetPassword = async ({ token, oldPassword, newPassword }) => {
   }
 
   return { ok: true };
+};
+
+/**
+ * อัปเดตโปรไฟล์: อัปโหลดรูป (ถ้ามี) ไป Storage แล้วอัปเดต users.profile_pic และ/หรือ name
+ * @param {string} userId - id ผู้ใช้ (จาก req.user.id)
+ * @param {{ file?: { buffer: Buffer, originalname: string, mimetype: string }, name?: string }} payload
+ * @returns {{ ok: boolean, code?: string, message?: string, user?: object }}
+ */
+export const updateProfile = async (userId, payload) => {
+  const { file, name } = payload;
+  const updates = {};
+  if (name !== undefined && typeof name === "string") {
+    updates.name = name.trim();
+  }
+  if (file && file.buffer && Buffer.isBuffer(file.buffer)) {
+    const { publicUrl } = await uploadAvatar(
+      file.buffer,
+      file.originalname,
+      file.mimetype,
+      userId
+    );
+    updates.profile_pic = publicUrl;
+  }
+  if (Object.keys(updates).length === 0) {
+    const profile = await usersRepository.findById(userId);
+    if (!profile) {
+      return { ok: false, code: "USER_NOT_FOUND", message: "User profile not found" };
+    }
+    return {
+      ok: true,
+      user: {
+        id: profile.id,
+        email: null,
+        username: profile.username,
+        name: profile.name,
+        role: profile.role,
+        profilePic: profile.profile_pic,
+      },
+    };
+  }
+  const updated = await usersRepository.updateProfile(userId, updates);
+  if (!updated) {
+    return { ok: false, code: "USER_NOT_FOUND", message: "User profile not found" };
+  }
+  return {
+    ok: true,
+    user: {
+      id: updated.id,
+      email: null,
+      username: updated.username,
+      name: updated.name,
+      role: updated.role,
+      profilePic: updated.profile_pic,
+    },
+  };
 };
