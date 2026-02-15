@@ -32,6 +32,8 @@ export const getPostByIdService = async (postId) => {
 
 export const updatePostService = async (postId, body, imageFile = null) => {
   const payload = { ...body };
+  payload.category_id = Number(body.category_id) || parseInt(body.category_id, 10);
+  payload.status_id = Number(body.status_id) || parseInt(body.status_id, 10);
   if (imageFile && imageFile.buffer) {
     const { publicUrl } = await uploadPostImage(
       imageFile.buffer,
