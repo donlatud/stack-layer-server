@@ -1,46 +1,40 @@
 import {
   createPostService,
   getPostsService,
-  getPostByIdService,
   updatePostService,
   deletePostService,
 } from "../services/posts.service.mjs";
 import { getLikeInfoService, getLikesForPostsService } from "../services/likes.service.mjs";
+import { POST_MESSAGES } from "../constants/messages.mjs";
+
+const isStorageError = (err) =>
+  err?.message && (err.message.includes("storage") || err.message.includes("Bucket"));
 
 export const createPostController = async (req, res) => {
   try {
     const body = req.body;
     const imageFile = req.files?.imageFile?.[0] ?? null;
     await createPostService(body, imageFile);
-    return res.status(201).json({
-      message: "Created post successfully",
-    });
+    return res.status(201).json({ message: POST_MESSAGES.CREATED });
   } catch (err) {
     console.error("createPostController", err);
-    const message =
-      err.message?.includes("storage") || err.message?.includes("Bucket")
-        ? "Server could not upload image"
-        : "Server could not create post because database connection";
+    const message = isStorageError(err)
+      ? POST_MESSAGES.UPLOAD_IMAGE_ERROR
+      : POST_MESSAGES.CREATE_ERROR;
     return res.status(500).json({ message });
   }
-}
+};
 
 export const getPostByIdController = async (req, res) => {
   try {
-    const { postId } = req.params;
-    const post = await getPostByIdService(postId);
-    if (!post) {
-      return res.status(404).json({ message: "Server could not find a requested post" });
-    }
+    const post = req.post;
     const userId = req.user?.id ?? null;
     const likeInfo = await getLikeInfoService(post.id, userId);
     const data = { ...post, ...likeInfo };
     return res.status(200).json({ data });
   } catch (err) {
     console.error("getPostByIdController", err);
-    return res.status(500).json({
-      message: "Server could not read post because database connection",
-    });
+    return res.status(500).json({ message: POST_MESSAGES.READ_ERROR });
   }
 };
 
@@ -50,15 +44,12 @@ export const updatePostController = async (req, res) => {
     const body = req.body;
     const imageFile = req.files?.imageFile?.[0] ?? null;
     await updatePostService(postId, body, imageFile);
-    return res.status(200).json({
-      message: "Updated post successfully",
-    });
+    return res.status(200).json({ message: POST_MESSAGES.UPDATED });
   } catch (err) {
     console.error("updatePostController", err);
-    const message =
-      err.message?.includes("storage") || err.message?.includes("Bucket")
-        ? "Server could not upload image"
-        : "Server could not update post because database connection";
+    const message = isStorageError(err)
+      ? POST_MESSAGES.UPLOAD_IMAGE_ERROR
+      : POST_MESSAGES.UPDATE_ERROR;
     return res.status(500).json({ message });
   }
 };
@@ -67,17 +58,10 @@ export const deletePostController = async (req, res) => {
   try {
     const { postId } = req.params;
     await deletePostService(postId);
-    return res.status(200).json(
-      {
-        "message": "Deleted post sucessfully"
-      }
-    );
-  } catch {
-    return res.status(500).json(
-      {
-        "message": "Server could not delete post because database connection"
-      }
-    );
+    return res.status(200).json({ message: POST_MESSAGES.DELETED });
+  } catch (err) {
+    console.error("deletePostController", err);
+    return res.status(500).json({ message: POST_MESSAGES.DELETE_ERROR });
   }
 };
 
@@ -98,8 +82,6 @@ export const getPostsController = async (req, res) => {
     });
   } catch (err) {
     console.error("getPostsController", err);
-    return res.status(500).json({
-      message: "Server could not read post because database connection",
-    });
+    return res.status(500).json({ message: POST_MESSAGES.READ_ERROR });
   }
 };
