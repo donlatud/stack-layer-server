@@ -25,11 +25,15 @@ const formatTimestamp = (dateStr) => {
   });
 };
 
-/** Get combined notifications: comments, likes, published */
-export const getNotificationsService = async (limit = 20) => {
+/**
+ * Get combined notifications: comments, likes, published.
+ * @param {number} limit
+ * @param {string} [role] - 'admin' = all types; otherwise only 'published' (new posts by admin).
+ */
+export const getNotificationsService = async (limit = 20, role = "user") => {
   const [comments, likes, publishedPosts] = await Promise.all([
-    getRecentCommentsForNotifications(limit),
-    getRecentLikesForNotifications(limit),
+    role === "admin" ? getRecentCommentsForNotifications(limit) : Promise.resolve([]),
+    role === "admin" ? getRecentLikesForNotifications(limit) : Promise.resolve([]),
     getRecentPublishedPostsForNotifications(limit),
   ]);
 
